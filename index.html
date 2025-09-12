@@ -1,0 +1,345 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Raman Kubal Austin 2025</title>
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @keyframes gradient1 {
+          0%, 100% { transform: rotate(0deg) scale(1); }
+          25% { transform: rotate(90deg) scale(1.1); }
+          50% { transform: rotate(180deg) scale(1); }
+          75% { transform: rotate(270deg) scale(1.1); }
+        }
+        
+        @keyframes gradient2 {
+          0% { background-position: 0% 50%; }
+          50% { background-position: 100% 50%; }
+          100% { background-position: 0% 50%; }
+        }
+        
+        @keyframes pulse {
+          0%, 100% { opacity: 0.4; }
+          50% { opacity: 0.7; }
+        }
+        
+        @keyframes float1 {
+          0%, 100% { transform: translate(0, 0) scale(1); }
+          25% { transform: translate(100px, -100px) scale(1.2); }
+          50% { transform: translate(-100px, -200px) scale(0.8); }
+          75% { transform: translate(-200px, 100px) scale(1.1); }
+        }
+        
+        @keyframes float2 {
+          0%, 100% { transform: translate(100vw, 100vh) scale(1); }
+          25% { transform: translate(80vw, 20vh) scale(1.3); }
+          50% { transform: translate(50vw, 80vh) scale(0.9); }
+          75% { transform: translate(20vw, 40vh) scale(1.2); }
+        }
+        
+        @keyframes float3 {
+          0%, 100% { transform: translate(50vw, 0) scale(1); }
+          33% { transform: translate(80vw, 60vh) scale(1.4); }
+          66% { transform: translate(20vw, 30vh) scale(0.7); }
+        }
+        
+        @keyframes shimmer {
+          0% { filter: brightness(1); }
+          50% { filter: brightness(1.3); }
+          100% { filter: brightness(1); }
+        }
+    </style>
+</head>
+<body>
+    <div id="root"></div>
+    
+    <script type="text/babel">
+        const { useState, useEffect } = React;
+
+        const App = () => {
+          const [currentScreen, setCurrentScreen] = useState('countdown');
+          const [timeLeft, setTimeLeft] = useState({ days: 0, hours: 0, minutes: 0, seconds: 0 });
+          const [phrase, setPhrase] = useState('');
+          const [isCountdownComplete, setIsCountdownComplete] = useState(false);
+
+          // Target date: November 20th, 9:00 PM CST
+          const targetDate = new Date('2025-11-20T21:00:00-06:00');
+
+          useEffect(() => {
+            const timer = setInterval(() => {
+              const now = new Date().getTime();
+              const target = targetDate.getTime();
+              const difference = target - now;
+
+              if (difference > 0) {
+                setTimeLeft({
+                  days: Math.floor(difference / (1000 * 60 * 60 * 24)),
+                  hours: Math.floor((difference % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60)),
+                  minutes: Math.floor((difference % (1000 * 60 * 60)) / (1000 * 60)),
+                  seconds: Math.floor((difference % (1000 * 60)) / 1000)
+                });
+              } else {
+                setIsCountdownComplete(true);
+                setTimeLeft({ days: 0, hours: 0, minutes: 0, seconds: 0 });
+              }
+            }, 1000);
+
+            return () => clearInterval(timer);
+          }, []);
+
+          const handleLogin = () => {
+            setCurrentScreen('phrase');
+          };
+
+          const handlePhraseSubmit = () => {
+            if (phrase.toLowerCase().trim() === 'rheezy kuballer') {
+              setCurrentScreen('app');
+            } else {
+              alert('Incorrect phrase. Please try again.');
+              setPhrase('');
+            }
+          };
+
+          const handleKeyPress = (e) => {
+            if (e.key === 'Enter') {
+              handlePhraseSubmit();
+            }
+          };
+
+          const handleBackToCountdown = () => {
+            setCurrentScreen('countdown');
+            setPhrase('');
+          };
+
+          return (
+            <div className="min-h-screen relative overflow-hidden flex flex-col">
+              {/* Animated Background Layers */}
+              <div className="absolute inset-0">
+                {/* Base gradient */}
+                <div className="absolute inset-0 bg-gradient-to-br from-black via-red-950 to-black"></div>
+                
+                {/* Animated gradient overlay 1 */}
+                <div 
+                  className="absolute inset-0 opacity-80"
+                  style={{
+                    background: 'radial-gradient(circle at 20% 50%, #450a0a 0%, transparent 50%), radial-gradient(circle at 80% 80%, #1a0000 0%, transparent 50%), radial-gradient(circle at 40% 20%, #3c0a0a 0%, transparent 50%)',
+                    animation: 'gradient1 4s ease infinite'
+                  }}
+                ></div>
+                
+                {/* Animated gradient overlay 2 */}
+                <div 
+                  className="absolute inset-0 opacity-60"
+                  style={{
+                    background: 'linear-gradient(45deg, #000000, #450a0a, #1c0404, #000000)',
+                    backgroundSize: '400% 400%',
+                    animation: 'gradient2 3s ease infinite'
+                  }}
+                ></div>
+
+                {/* Pulsing dark overlay */}
+                <div 
+                  className="absolute inset-0"
+                  style={{
+                    background: 'radial-gradient(circle at center, transparent 0%, rgba(0,0,0,0.4) 100%)',
+                    animation: 'pulse 2s ease-in-out infinite'
+                  }}
+                ></div>
+              </div>
+
+              {/* Floating orbs */}
+              <div className="absolute inset-0 overflow-hidden pointer-events-none">
+                <div className="absolute w-96 h-96 -top-48 -left-48 bg-red-900/30 rounded-full blur-3xl animate-pulse"></div>
+                <div className="absolute w-96 h-96 -bottom-48 -right-48 bg-amber-950/30 rounded-full blur-3xl animate-pulse" style={{animationDelay: '1s'}}></div>
+                <div className="absolute w-64 h-64 top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-black/40 rounded-full blur-3xl animate-pulse" style={{animationDelay: '0.5s'}}></div>
+                
+                {/* Moving orbs */}
+                <div 
+                  className="absolute w-48 h-48 bg-red-800/20 rounded-full blur-2xl"
+                  style={{
+                    animation: 'float1 8s infinite ease-in-out'
+                  }}
+                ></div>
+                <div 
+                  className="absolute w-32 h-32 bg-amber-900/20 rounded-full blur-2xl"
+                  style={{
+                    animation: 'float2 10s infinite ease-in-out'
+                  }}
+                ></div>
+                <div 
+                  className="absolute w-40 h-40 bg-black/30 rounded-full blur-2xl"
+                  style={{
+                    animation: 'float3 12s infinite ease-in-out'
+                  }}
+                ></div>
+              </div>
+
+              {/* Logo */}
+              <div className="absolute top-4 left-4 md:top-6 md:left-6 z-10">
+                <h1 className="text-white font-bold text-lg md:text-xl bg-black/40 backdrop-blur-md rounded-lg px-3 py-2 border border-red-900/30 shadow-2xl">
+                  Raman Kubal Austin 2025
+                </h1>
+              </div>
+
+              {/* Main Content */}
+              <div className="relative z-10 flex-1 flex items-center justify-center p-4">
+                <div className="w-full max-w-md mx-auto">
+                  
+                  {/* Countdown Screen with Login Option */}
+                  {currentScreen === 'countdown' && (
+                    <div className="bg-black/40 backdrop-blur-xl rounded-2xl p-8 border border-red-900/30 shadow-2xl">
+                      <div className="text-center mb-8">
+                        <h2 className="text-3xl md:text-4xl font-bold text-white mb-4 drop-shadow-lg">
+                          {isCountdownComplete ? 'The Wait is Over!' : 'Coming Soon'}
+                        </h2>
+                        <p className="text-red-200 text-lg drop-shadow">
+                          {isCountdownComplete ? 'The launch has arrived!' : 'Launch on November 20th, 9:00 PM CST'}
+                        </p>
+                      </div>
+                      
+                      <div className="grid grid-cols-4 gap-4 mb-8">
+                        {[
+                          { label: 'Days', value: timeLeft.days },
+                          { label: 'Hours', value: timeLeft.hours },
+                          { label: 'Minutes', value: timeLeft.minutes },
+                          { label: 'Seconds', value: timeLeft.seconds }
+                        ].map((item, index) => (
+                          <div key={index} className="text-center">
+                            <div className="bg-gradient-to-br from-red-900/40 to-black/60 backdrop-blur-sm rounded-lg p-4 border border-red-800/30 shadow-lg">
+                              <div className="text-2xl md:text-3xl font-bold text-white drop-shadow-lg">
+                                {String(item.value).padStart(2, '0')}
+                              </div>
+                              <div className="text-red-200 text-sm mt-1">
+                                {item.label}
+                              </div>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+
+                      <div className="text-center mb-6">
+                        <div className="w-full h-2 bg-black/50 rounded-full overflow-hidden">
+                          <div 
+                            className="h-full rounded-full transition-all duration-1000 shadow-lg"
+                            style={{ 
+                              width: isCountdownComplete ? '100%' : '45%',
+                              background: 'linear-gradient(90deg, #dc2626, #991b1b, #450a0a)',
+                              animation: 'shimmer 2s infinite'
+                            }}
+                          ></div>
+                        </div>
+                        <p className="text-red-200/70 text-sm mt-2 drop-shadow">
+                          {isCountdownComplete ? 'Launch complete!' : 'Preparing launch sequence...'}
+                        </p>
+                      </div>
+
+                      {/* Always visible login button */}
+                      <div className="space-y-3">
+                        <button
+                          onClick={handleLogin}
+                          className="w-full bg-gradient-to-r from-red-800 to-red-950 hover:from-red-700 hover:to-red-900 text-white font-bold py-4 px-6 rounded-lg transition-all duration-300 transform hover:scale-105 shadow-xl backdrop-blur-sm border border-red-700/30"
+                        >
+                          Enter Application
+                        </button>
+                        <p className="text-center text-red-200/60 text-sm drop-shadow">
+                          {isCountdownComplete ? 'Welcome! Access is now open to all.' : 'Early access available with verification'}
+                        </p>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Phrase Verification Screen */}
+                  {currentScreen === 'phrase' && (
+                    <div className="bg-black/40 backdrop-blur-xl rounded-2xl p-8 border border-red-900/30 shadow-2xl">
+                      <div className="text-center mb-8">
+                        <h2 className="text-2xl md:text-3xl font-bold text-white mb-4 drop-shadow-lg">
+                          Verification Required
+                        </h2>
+                        <p className="text-red-200 drop-shadow">
+                          Enter the access phrase to continue
+                        </p>
+                      </div>
+                      
+                      <div className="space-y-6">
+                        <input
+                          type="text"
+                          value={phrase}
+                          onChange={(e) => setPhrase(e.target.value)}
+                          onKeyPress={handleKeyPress}
+                          placeholder="Enter phrase..."
+                          className="w-full px-4 py-3 bg-black/50 backdrop-blur-sm border border-red-900/30 rounded-lg text-white placeholder-red-200/50 focus:outline-none focus:border-red-500 focus:ring-2 focus:ring-red-500/30 shadow-inner"
+                          autoFocus
+                        />
+                        
+                        <button
+                          onClick={handlePhraseSubmit}
+                          className="w-full bg-gradient-to-r from-red-800 to-red-950 hover:from-red-700 hover:to-red-900 text-white font-bold py-3 px-6 rounded-lg transition-all duration-300 transform hover:scale-105 shadow-xl"
+                        >
+                          Verify Access
+                        </button>
+
+                        <button
+                          onClick={handleBackToCountdown}
+                          className="w-full bg-black/50 hover:bg-black/60 text-red-200 font-semibold py-3 px-6 rounded-lg transition-all duration-300 border border-red-900/30"
+                        >
+                          Back to Countdown
+                        </button>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Main App Screen */}
+                  {currentScreen === 'app' && (
+                    <div className="bg-black/40 backdrop-blur-xl rounded-2xl p-8 border border-red-900/30 shadow-2xl">
+                      <div className="text-center mb-8">
+                        <h2 className="text-3xl md:text-4xl font-bold text-white mb-4 drop-shadow-lg">
+                          🎉 Welcome Inside! 🎉
+                        </h2>
+                        <p className="text-red-200 text-lg drop-shadow">
+                          You have successfully accessed the application
+                        </p>
+                      </div>
+                      
+                      <div className="space-y-6">
+                        <div className="bg-gradient-to-br from-red-900/30 to-black/50 backdrop-blur-sm rounded-lg p-6 border border-red-800/30 shadow-lg">
+                          <h3 className="text-xl font-bold text-white mb-3 drop-shadow">
+                            Austin 2025 Experience
+                          </h3>
+                          <p className="text-red-200">
+                            Congratulations on gaining access! This exclusive application is now ready for your exploration.
+                          </p>
+                        </div>
+                        
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                          <button className="bg-gradient-to-br from-amber-900/40 to-black/50 hover:from-amber-800/50 hover:to-black/60 backdrop-blur-sm border border-amber-800/30 rounded-lg p-4 text-white font-semibold transition-all duration-300 transform hover:scale-105 shadow-lg">
+                            Explore Features
+                          </button>
+                          <button className="bg-gradient-to-br from-red-900/40 to-black/50 hover:from-red-800/50 hover:to-black/60 backdrop-blur-sm border border-red-800/30 rounded-lg p-4 text-white font-semibold transition-all duration-300 transform hover:scale-105 shadow-lg">
+                            Settings
+                          </button>
+                        </div>
+
+                        <button
+                          onClick={handleBackToCountdown}
+                          className="w-full bg-black/50 hover:bg-black/60 text-red-200 font-semibold py-3 px-6 rounded-lg transition-all duration-300 border border-red-900/30 mt-4"
+                        >
+                          Back to Countdown
+                        </button>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+          );
+        };
+
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<App />);
+    </script>
+</body>
+</html>
