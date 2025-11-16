@@ -87,6 +87,12 @@
           75% { transform: translateX(10px); }
         }
 
+        @keyframes flip {
+          0% { transform: rotateX(0); }
+          50% { transform: rotateX(90deg); }
+          100% { transform: rotateX(0); }
+        }
+
         .vault-door {
           perspective: 1000px;
           transform-style: preserve-3d;
@@ -103,6 +109,14 @@
 
         .wrong-answer {
           animation: wrongAnswer 0.4s ease-in-out;
+        }
+
+        .wordle-tile {
+          transition: all 0.3s ease;
+        }
+
+        .wordle-tile.flip {
+          animation: flip 0.6s ease;
         }
 
         /* Mobile-specific styles */
@@ -136,9 +150,22 @@
           const [isVaultOpening, setIsVaultOpening] = useState(false);
           const [currentSlide, setCurrentSlide] = useState(0);
           const [answeredCorrectly, setAnsweredCorrectly] = useState(false);
+          const [slideshowImages, setSlideshowImages] = useState([]);
+          const [imagesLoaded, setImagesLoaded] = useState(false);
+          
+          // Wordle state
+          const [wordleGuesses, setWordleGuesses] = useState([]);
+          const [currentGuess, setCurrentGuess] = useState('');
+          const [wordleWon, setWordleWon] = useState(false);
+          const [wordleMessage, setWordleMessage] = useState('');
+          const [shakeRow, setShakeRow] = useState(-1);
 
           // Target date: November 20th, 9:00 PM CST
           const targetDate = new Date('2025-11-20T21:00:00-06:00');
+
+          // Super hard random 6-letter word - change this to something meaningful to your friendship!
+          const WORDLE_ANSWER = 'ZEPHYR'; // Extremely difficult word!
+          const MAX_GUESSES = 6;
 
           // Trivia Questions
           const triviaQuestions = [
@@ -205,14 +232,63 @@
             }
           ];
 
-          // Placeholder image paths - replace with actual paths
-          const slideshowImages = [
-            'path/to/image1.jpg',
-            'path/to/image2.jpg',
-            'path/to/image3.jpg',
-            'path/to/image4.jpg',
-            'path/to/image5.jpg'
-          ];
+          // Load images from the same directory
+          useEffect(() => {
+            const imageExtensions = ['jpg', 'jpeg', 'png', 'gif', 'webp', 'JPG', 'JPEG', 'PNG', 'GIF', 'WEBP'];
+            const imageNames = [];
+            
+            // Common image naming patterns
+            for (let i = 1; i <= 20; i++) {
+              imageExtensions.forEach(ext => {
+                imageNames.push(`image${i}.${ext}`);
+                imageNames.push(`img${i}.${ext}`);
+                imageNames.push(`photo${i}.${ext}`);
+                imageNames.push(`pic${i}.${ext}`);
+                imageNames.push(`${i}.${ext}`);
+              });
+            }
+
+            // Try to load each potential image
+            const loadedImages = [];
+            let loadedCount = 0;
+            const totalToTry = imageNames.length;
+
+            imageNames.forEach(imageName => {
+              const img = new Image();
+              img.onload = () => {
+                loadedImages.push(imageName);
+                loadedCount++;
+                if (loadedCount === totalToTry) {
+                  finishLoading();
+                }
+              };
+              img.onerror = () => {
+                loadedCount++;
+                if (loadedCount === totalToTry) {
+                  finishLoading();
+                }
+              };
+              img.src = imageName;
+            });
+
+            const finishLoading = () => {
+              if (loadedImages.length > 0) {
+                setSlideshowImages(loadedImages);
+              } else {
+                // Fallback to placeholder if no images found
+                setSlideshowImages(['placeholder1', 'placeholder2', 'placeholder3', 'placeholder4', 'placeholder5']);
+              }
+              setImagesLoaded(true);
+            };
+
+            // Timeout in case image loading takes too long
+            setTimeout(() => {
+              if (!imagesLoaded) {
+                setSlideshowImages(['placeholder1', 'placeholder2', 'placeholder3', 'placeholder4', 'placeholder5']);
+                setImagesLoaded(true);
+              }
+            }, 3000);
+          }, []);
 
           useEffect(() => {
             const timer = setInterval(() => {
@@ -237,13 +313,13 @@
           }, []);
 
           useEffect(() => {
-            if (currentScreen === 'slideshow') {
+            if (currentScreen === 'slideshow' && slideshowImages.length > 0) {
               const slideTimer = setInterval(() => {
                 setCurrentSlide((prev) => (prev + 1) % slideshowImages.length);
               }, 3000);
               return () => clearInterval(slideTimer);
             }
-          }, [currentScreen]);
+          }, [currentScreen, slideshowImages]);
 
           const handleLogin = () => {
             setCurrentScreen('phrase');
@@ -272,6 +348,10 @@
             setShowHint(false);
             setWrongAttempts(0);
             setAnsweredCorrectly(false);
+            setWordleGuesses([]);
+            setCurrentGuess('');
+            setWordleWon(false);
+            setWordleMessage('');
           };
 
           const handleAnswerSelect = (index) => {
@@ -287,11 +367,8 @@
                   setWrongAttempts(0);
                   setAnsweredCorrectly(false);
                 } else {
-                  // All questions answered correctly
-                  setIsVaultOpening(true);
-                  setTimeout(() => {
-                    setCurrentScreen('slideshow');
-                  }, 2500);
+                  // All trivia questions answered - move to Wordle
+                  setCurrentScreen('wordle');
                 }
               }, 1500);
             } else {
@@ -303,6 +380,59 @@
             }
           };
 
+          // Wordle functions
+          const handleWordleInput = (e) => {
+            const value = e.target.value.toUpperCase();
+            if (value.length <= WORDLE_ANSWER.length && /^[A-Z]*$/.test(value)) {
+              setCurrentGuess(value);
+              setWordleMessage('');
+            }
+          };
+
+          const handleWordleSubmit = () => {
+            if (currentGuess.length !== WORDLE_ANSWER.length) {
+              setWordleMessage(`Word must be ${WORDLE_ANSWER.length} letters!`);
+              setShakeRow(wordleGuesses.length);
+              setTimeout(() => setShakeRow(-1), 500);
+              return;
+            }
+
+            const newGuesses = [...wordleGuesses, currentGuess];
+            setWordleGuesses(newGuesses);
+            
+            if (currentGuess === WORDLE_ANSWER) {
+              setWordleWon(true);
+              setWordleMessage('Correct! Opening vault...');
+              setTimeout(() => {
+                setIsVaultOpening(true);
+                setTimeout(() => {
+                  setCurrentScreen('slideshow');
+                }, 2500);
+              }, 1500);
+            } else if (newGuesses.length >= MAX_GUESSES) {
+              setWordleMessage(`Game Over! The word was ${WORDLE_ANSWER}`);
+            } else {
+              setWordleMessage(`${MAX_GUESSES - newGuesses.length} attempts remaining`);
+            }
+            
+            setCurrentGuess('');
+          };
+
+          const handleWordleKeyPress = (e) => {
+            if (e.key === 'Enter') {
+              handleWordleSubmit();
+            }
+          };
+
+          const getLetterColor = (letter, index, guess) => {
+            if (guess[index] === WORDLE_ANSWER[index]) {
+              return 'bg-green-600 border-green-500'; // Correct position
+            } else if (WORDLE_ANSWER.includes(guess[index])) {
+              return 'bg-yellow-600 border-yellow-500'; // In word, wrong position
+            }
+            return 'bg-gray-700 border-gray-600'; // Not in word
+          };
+
           const VaultGraphic = ({ isOpening }) => (
             <div className="relative w-32 h-32 md:w-48 md:h-48 mx-auto mb-6">
               <svg
@@ -310,17 +440,10 @@
                 className={`w-full h-full ${isOpening ? 'vault-door-open' : ''}`}
                 style={{ animation: isOpening ? '' : 'vaultGlow 2s infinite' }}
               >
-                {/* Vault body */}
                 <rect x="20" y="20" width="160" height="160" rx="10" fill="#1a1a1a" stroke="#dc2626" strokeWidth="3"/>
-                
-                {/* Vault door */}
                 <rect x="30" y="30" width="140" height="140" rx="8" fill="#2a2a2a" stroke="#991b1b" strokeWidth="2"/>
-                
-                {/* Center dial */}
                 <circle cx="100" cy="100" r="35" fill="#3a3a3a" stroke="#dc2626" strokeWidth="2"/>
                 <circle cx="100" cy="100" r="25" fill="#1a1a1a" stroke="#991b1b" strokeWidth="1"/>
-                
-                {/* Dial marks */}
                 {[0, 90, 180, 270].map(angle => (
                   <line
                     key={angle}
@@ -333,11 +456,7 @@
                     strokeWidth="2"
                   />
                 ))}
-                
-                {/* Handle */}
                 <rect x="150" y="90" width="20" height="20" rx="2" fill="#dc2626"/>
-                
-                {/* Lock indicator */}
                 <circle cx="100" cy="50" r="8" fill={isOpening ? "#22c55e" : "#dc2626"} />
               </svg>
             </div>
@@ -511,81 +630,161 @@
                   {/* Vault Trivia Screen */}
                   {currentScreen === 'vault' && (
                     <div className="bg-black/40 backdrop-blur-xl rounded-2xl p-4 md:p-8 border border-red-900/30 shadow-2xl">
+                      <VaultGraphic isOpening={false} />
+                      
+                      <div className="text-center mb-4 md:mb-6">
+                        <h2 className="text-xl md:text-2xl font-bold text-white mb-2 drop-shadow-lg">
+                          Unlock the Vault - Part 1
+                        </h2>
+                        <p className="text-red-200 text-xs md:text-sm mb-2">
+                          Answer {triviaQuestions.length} questions about Raman & Anish's friendship
+                        </p>
+                        <div className="flex justify-center gap-1 md:gap-2">
+                          {triviaQuestions.map((_, index) => (
+                            <div
+                              key={index}
+                              className={`w-2 h-2 md:w-3 md:h-3 rounded-full ${
+                                index < currentQuestion
+                                  ? 'bg-green-500'
+                                  : index === currentQuestion
+                                  ? 'bg-yellow-500'
+                                  : 'bg-red-900/50'
+                              }`}
+                            />
+                          ))}
+                        </div>
+                      </div>
+
+                      <div className="mb-6">
+                        <h3 className="text-white font-bold text-sm md:text-lg mb-4">
+                          Question {currentQuestion + 1} of {triviaQuestions.length}
+                        </h3>
+                        <p className="text-red-100 text-sm md:text-base mb-4">
+                          {triviaQuestions[currentQuestion].question}
+                        </p>
+
+                        {showHint && (
+                          <div className="bg-yellow-900/30 border border-yellow-700/50 rounded-lg p-3 mb-4">
+                            <p className="text-yellow-200 text-xs md:text-sm">
+                              💡 Hint: {triviaQuestions[currentQuestion].hint}
+                            </p>
+                          </div>
+                        )}
+
+                        <div className="space-y-2 md:space-y-3">
+                          {triviaQuestions[currentQuestion].options.map((option, index) => (
+                            <button
+                              key={index}
+                              onClick={() => handleAnswerSelect(index)}
+                              disabled={answeredCorrectly}
+                              className={`w-full text-left px-3 md:px-4 py-2 md:py-3 rounded-lg transition-all duration-300 text-sm md:text-base ${
+                                selectedAnswer === index && index === triviaQuestions[currentQuestion].correct
+                                  ? 'bg-green-900/40 border-green-500 correct-answer'
+                                  : selectedAnswer === index
+                                  ? 'bg-red-900/40 border-red-500 wrong-answer'
+                                  : 'bg-black/50 hover:bg-red-900/30 border-red-900/30'
+                              } border backdrop-blur-sm text-white`}
+                            >
+                              {option}
+                            </button>
+                          ))}
+                        </div>
+
+                        {wrongAttempts > 0 && (
+                          <p className="text-red-300 text-xs md:text-sm mt-3 text-center">
+                            Attempts: {wrongAttempts} - Keep trying!
+                          </p>
+                        )}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Wordle Screen */}
+                  {currentScreen === 'wordle' && (
+                    <div className="bg-black/40 backdrop-blur-xl rounded-2xl p-4 md:p-8 border border-red-900/30 shadow-2xl">
                       <VaultGraphic isOpening={isVaultOpening} />
                       
-                      {!isVaultOpening && (
+                      {!isVaultOpening && !wordleWon && (
                         <>
                           <div className="text-center mb-4 md:mb-6">
                             <h2 className="text-xl md:text-2xl font-bold text-white mb-2 drop-shadow-lg">
-                              Unlock the Vault
+                              Final Challenge: Wordle 
                             </h2>
                             <p className="text-red-200 text-xs md:text-sm mb-2">
-                              Answer {triviaQuestions.length} questions about Raman & Anish's friendship
+                              Guess the {WORDLE_ANSWER.length}-letter word to unlock the vault!
                             </p>
-                            <div className="flex justify-center gap-1 md:gap-2">
-                              {triviaQuestions.map((_, index) => (
-                                <div
-                                  key={index}
-                                  className={`w-2 h-2 md:w-3 md:h-3 rounded-full ${
-                                    index < currentQuestion
-                                      ? 'bg-green-500'
-                                      : index === currentQuestion
-                                      ? 'bg-yellow-500'
-                                      : 'bg-red-900/50'
-                                  }`}
-                                />
-                              ))}
-                            </div>
+                            <p className="text-yellow-300 text-xs md:text-sm font-bold">
+                              EXTREMELY DIFFICULT - Good luck! 
+                            </p>
                           </div>
 
-                          <div className="mb-6">
-                            <h3 className="text-white font-bold text-sm md:text-lg mb-4">
-                              Question {currentQuestion + 1} of {triviaQuestions.length}
-                            </h3>
-                            <p className="text-red-100 text-sm md:text-base mb-4">
-                              {triviaQuestions[currentQuestion].question}
-                            </p>
-
-                            {showHint && (
-                              <div className="bg-yellow-900/30 border border-yellow-700/50 rounded-lg p-3 mb-4">
-                                <p className="text-yellow-200 text-xs md:text-sm">
-                                  💡 Hint: {triviaQuestions[currentQuestion].hint}
-                                </p>
+                          {/* Wordle Grid */}
+                          <div className="mb-4 space-y-2">
+                            {[...Array(MAX_GUESSES)].map((_, rowIndex) => (
+                              <div 
+                                key={rowIndex} 
+                                className={`flex gap-1 md:gap-2 justify-center ${
+                                  shakeRow === rowIndex ? 'wrong-answer' : ''
+                                }`}
+                              >
+                                {[...Array(WORDLE_ANSWER.length)].map((_, colIndex) => {
+                                  const guess = wordleGuesses[rowIndex];
+                                  const letter = guess ? guess[colIndex] : (rowIndex === wordleGuesses.length ? currentGuess[colIndex] : '');
+                                  const colorClass = guess ? getLetterColor(letter, colIndex, guess) : 'bg-black/50 border-red-900/30';
+                                  
+                                  return (
+                                    <div
+                                      key={colIndex}
+                                      className={`wordle-tile w-10 h-10 md:w-14 md:h-14 border-2 rounded-lg flex items-center justify-center text-white font-bold text-lg md:text-2xl ${colorClass} ${
+                                        guess ? 'flip' : ''
+                                      }`}
+                                    >
+                                      {letter}
+                                    </div>
+                                  );
+                                })}
                               </div>
-                            )}
-
-                            <div className="space-y-2 md:space-y-3">
-                              {triviaQuestions[currentQuestion].options.map((option, index) => (
-                                <button
-                                  key={index}
-                                  onClick={() => handleAnswerSelect(index)}
-                                  disabled={answeredCorrectly}
-                                  className={`w-full text-left px-3 md:px-4 py-2 md:py-3 rounded-lg transition-all duration-300 text-sm md:text-base ${
-                                    selectedAnswer === index && index === triviaQuestions[currentQuestion].correct
-                                      ? 'bg-green-900/40 border-green-500 correct-answer'
-                                      : selectedAnswer === index
-                                      ? 'bg-red-900/40 border-red-500 wrong-answer'
-                                      : 'bg-black/50 hover:bg-red-900/30 border-red-900/30'
-                                  } border backdrop-blur-sm text-white`}
-                                >
-                                  {option}
-                                </button>
-                              ))}
-                            </div>
-
-                            {wrongAttempts > 0 && (
-                              <p className="text-red-300 text-xs md:text-sm mt-3 text-center">
-                                Attempts: {wrongAttempts} - Keep trying!
-                              </p>
-                            )}
+                            ))}
                           </div>
+
+                          {wordleMessage && (
+                            <div className={`text-center mb-4 p-2 rounded-lg ${
+                              wordleMessage.includes('Game Over') 
+                                ? 'bg-red-900/30 text-red-200' 
+                                : 'bg-yellow-900/30 text-yellow-200'
+                            }`}>
+                              <p className="text-xs md:text-sm font-bold">{wordleMessage}</p>
+                            </div>
+                          )}
+
+                          {wordleGuesses.length < MAX_GUESSES && (
+                            <div className="space-y-3">
+                              <input
+                                type="text"
+                                value={currentGuess}
+                                onChange={handleWordleInput}
+                                onKeyPress={handleWordleKeyPress}
+                                placeholder={`Enter ${WORDLE_ANSWER.length}-letter word...`}
+                                className="w-full px-3 md:px-4 py-2 md:py-3 bg-black/50 backdrop-blur-sm border border-red-900/30 rounded-lg text-white text-center placeholder-red-200/50 focus:outline-none focus:border-red-500 focus:ring-2 focus:ring-red-500/30 shadow-inner text-base uppercase"
+                                maxLength={WORDLE_ANSWER.length}
+                                autoFocus
+                              />
+                              
+                              <button
+                                onClick={handleWordleSubmit}
+                                className="w-full bg-gradient-to-r from-red-800 to-red-950 hover:from-red-700 hover:to-red-900 text-white font-bold py-2 md:py-3 px-4 md:px-6 rounded-lg transition-all duration-300 transform hover:scale-105 shadow-xl text-sm md:text-base"
+                              >
+                                Submit Guess
+                              </button>
+                            </div>
+                          )}
                         </>
                       )}
 
-                      {isVaultOpening && (
+                      {(isVaultOpening || wordleWon) && (
                         <div className="text-center">
                           <h2 className="text-xl md:text-2xl font-bold text-white mb-2 animate-pulse">
-                            🎉 Vault Unlocked! 🎉
+                             Vault Unlocked! 
                           </h2>
                           <p className="text-green-400 text-sm md:text-base">
                             Congratulations! Opening the memories...
@@ -600,29 +799,38 @@
                     <div className="bg-black/40 backdrop-blur-xl rounded-2xl p-4 md:p-8 border border-red-900/30 shadow-2xl">
                       <div className="text-center mb-4 md:mb-6">
                         <h2 className="text-xl md:text-3xl font-bold text-white mb-2 drop-shadow-lg">
-                          Memory Lane
+                          Memory Lane 
                         </h2>
                         <p className="text-red-200 text-sm md:text-base">
                           Reliving the best moments
                         </p>
                       </div>
 
-                      <div className="relative aspect-video bg-black/50 rounded-lg overflow-hidden mb-4 md:mb-6">
+                      <div className="relative aspect-video bg-black/50 rounded-lg overflow-hidden mb-4 md:mb-6 border border-red-900/30">
                         {slideshowImages.map((image, index) => (
                           <div
                             key={index}
-                            className={`absolute inset-0 flex items-center justify-center ${
+                            className={`absolute inset-0 flex items-center justify-center transition-opacity duration-1000 ${
                               index === currentSlide ? 'opacity-100' : 'opacity-0'
-                            } transition-opacity duration-1000`}
+                            }`}
                           >
-                            {/* Replace with actual images when paths are provided */}
-                            <div className="text-white text-center">
-                              <p className="text-xs md:text-sm mb-2">Photo {index + 1}</p>
-                              <div className="w-full h-48 md:h-64 bg-gradient-to-br from-red-900/40 to-black/60 rounded-lg flex items-center justify-center">
-                                <span className="text-2xl md:text-4xl">📸</span>
+                            {image.startsWith('placeholder') ? (
+                              <div className="text-white text-center p-4 w-full">
+                                <p className="text-xs md:text-sm mb-2">Photo {index + 1}</p>
+                                <div className="w-full h-48 md:h-64 bg-gradient-to-br from-red-900/40 to-black/60 rounded-lg flex items-center justify-center">
+                                  <div className="text-center">
+                                    <span className="text-4xl md:text-6xl mb-2 block"></span>
+                                    <p className="text-xs md:text-sm text-red-200">Place images in the same folder as this HTML file</p>
+                                  </div>
+                                </div>
                               </div>
-                              {/* <img src={image} alt={`Memory ${index + 1}`} className="w-full h-auto rounded-lg" /> */}
-                            </div>
+                            ) : (
+                              <img 
+                                src={image} 
+                                alt={`Memory ${index + 1}`} 
+                                className="w-full h-full object-contain"
+                              />
+                            )}
                           </div>
                         ))}
                       </div>
